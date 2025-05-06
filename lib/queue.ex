@@ -5,12 +5,20 @@ defmodule JobScheduler.Queue do
     GenServer.start_link(__MODULE__, [], name: via_tuple(queue_name))
   end
 
-  def create_queue(queue_name) do
-    GenServer.call(__MODULE__, {:create_queue, queue_name})
+  def enqueue(queue_name, task) do
+    case Registry.lookup(JobScheduler.JobsRegistry, queue_name) do
+      [{pid, _}] -> GenServer.call(pid, {:enqueue, task})
+      [] ->
+        {:error, "queue #{queue_name} does not exist"}
+    end
   end
 
-  def list_queues do
-    GenServer.call(__MODULE__, :list_queues)
+  def list_tasks(queue_name) do
+    case Registry.lookup(JobScheduler.JobsRegistry, queue_name) do
+      [{pid, _}] -> GenServer.call(pid, :list_tasks)
+      [] ->
+        {:error, "queue #{queue_name} does not exist"}
+    end
   end
 
   defp via_tuple(queue_name) do
