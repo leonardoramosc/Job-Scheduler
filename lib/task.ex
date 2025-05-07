@@ -1,10 +1,11 @@
 defmodule JobScheduler.Task do
-  defstruct [:name, :created_at, :schedule_time, :status, :type, :body]
+  defstruct [:name, :created_at, :schedule_time, :status, :type, :url, :body]
 
-  def new(name, type, body, schedule_time) do
+  def new(name, type, url, body, schedule_time) do
     %__MODULE__{
       name: name,
       type: type,
+      url: url,
       body: body,
       schedule_time: schedule_time,
       status: :pending,
@@ -13,6 +14,7 @@ defmodule JobScheduler.Task do
   end
 
   def execute(task) do
+    HTTPoison.post(task.url, task.body)
     IO.puts("executing task #{task.name}")
     :ok
   end

@@ -28,6 +28,7 @@ defmodule JobScheduler.QueueManager do
       {:error, error} ->
         IO.inspect("unable to create queue. Reason:")
         IO.inspect(error)
+        {:reply, {:error, error}, queues}
       _ -> {:reply, :ok, queues}
     end
   end
