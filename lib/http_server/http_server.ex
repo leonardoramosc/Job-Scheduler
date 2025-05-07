@@ -1,4 +1,5 @@
 defmodule HTTPServer do
+  alias HTTPServer.{QueueHandler}
   use Plug.Router
 
   plug(Plug.Parsers,
@@ -11,7 +12,12 @@ defmodule HTTPServer do
   plug(:dispatch)
 
   post "/api/queue" do
-    HttpServer.QueueHandler.create_queue(conn)
+    QueueHandler.create_queue(conn)
+  end
+
+  post "/api/queue/:name/task" do
+    queue_name = conn.params["name"]
+    QueueHandler.create_task(conn, queue_name)
   end
 
   match _ do
