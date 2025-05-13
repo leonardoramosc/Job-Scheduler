@@ -56,20 +56,26 @@ defmodule JobScheduler.Queue do
   @impl true
   def handle_info(:tick, tasks) do
     IO.puts("processing pending tasks...")
-    {due_tasks, pending_tasks} =
-      Enum.split_with(tasks, fn task ->
-        DateTime.compare(task.schedule_time, DateTime.utc_now()) in [:lt, :eq]
-      end)
+
+    {due_tasks, pending_tasks_for_future} = split_tasks(tasks)
 
     unsuccessful_tasks =
       due_tasks
       |> Enum.map(&JobScheduler.Task.execute/1)
       |> Enum.filter(&(&1 != :ok))
 
-    pending_tasks = unsuccessful_tasks ++ pending_tasks
+    pending_tasks_for_future = unsuccessful_tasks ++ pending_tasks_for_future
 
-    schedule_processing_of_pending_tasks(pending_tasks)
-    {:noreply, pending_tasks}
+    schedule_processing_of_pending_tasks(pending_tasks_for_future)
+    {:noreply, pending_tasks_for_future}
+  end
+
+  # splits list into due tasks and tasks that are schedule for the future
+  # return value: {due_tasks, pending_tasks_for_future}
+  defp split_tasks(tasks) do
+    Enum.split_with(tasks, fn task ->
+      DateTime.compare(task.schedule_time, DateTime.utc_now()) in [:lt, :eq]
+    end)
   end
 
   defp schedule_processing_of_pending_tasks([]), do: :ok
