@@ -14,7 +14,7 @@ defmodule JobScheduler.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      mod: { JobScheduler.Application, ["initializing app"] },
+      mod: {JobScheduler.Application, ["initializing app"]},
       extra_applications: [:logger]
     ]
   end
@@ -24,7 +24,8 @@ defmodule JobScheduler.MixProject do
     [
       {:plug_cowboy, "~> 2.0"},
       {:jason, "~> 1.4"},
-      {:httpoison, "~> 2.0"}
+      {:httpoison, "~> 2.0"},
+      {:ecto_sql, "~> 3.0"}
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
     ]
