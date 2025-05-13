@@ -8,15 +8,13 @@ defmodule JobScheduler.Queue do
     GenServer.start_link(__MODULE__, [], name: via_tuple(queue_name))
   end
 
-  def enqueue(queue_name, name, type, url, body, schedule_time) do
-    task = JobScheduler.Task.new(name, type, url, body, schedule_time)
-
-    case Registry.lookup(JobScheduler.JobsRegistry, queue_name) do
+  def enqueue(task) do
+    case Registry.lookup(JobScheduler.JobsRegistry, task.queue_name) do
       [{pid, _}] ->
         GenServer.call(pid, {:enqueue, task})
 
       [] ->
-        {:error, "queue #{queue_name} does not exist"}
+        {:error, "queue #{task.queue_name} does not exist"}
     end
   end
 

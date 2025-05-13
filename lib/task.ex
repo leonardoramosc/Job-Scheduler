@@ -1,16 +1,49 @@
 defmodule JobScheduler.Task do
-  defstruct [:name, :created_at, :schedule_time, :status, :type, :url, :body]
+  use Ecto.Schema
+  import Ecto.Changeset
 
-  def new(name, type, url, body, schedule_time) do
-    %__MODULE__{
-      name: name,
-      type: type,
-      url: url,
-      body: body,
-      schedule_time: schedule_time,
-      status: :pending,
-      created_at: DateTime.utc_now()
-    }
+  @derive {Jason.Encoder, only: [:name, :url, :body, :schedule_time, :status, :created_at]}
+  @allowed_statuses ~w(active inactive banned)
+
+  schema "tasks" do
+    field :name, :string
+    field :url, :string
+    field :body, :map
+    field :schedule_time, :naive_datetime
+    field :status
+    field :created_at
+  end
+
+  def changeset(task, params \\ %{}) do
+    task
+    |> Map.put(:status, :pending)
+    |> cast(params, [:name, :url, :body, :schedule_time])
+    |> validate_required([:name, :url, :body, :schedule_time])
+    |> validate_inclusion(:status, @allowed_statuses)
+    |> validate_format(:url, ~r/^https?:\/\/[^\s]+$/)
+    |> validate_map(:body)
+    |> validate_future_date(:schedule_time)
+  end
+
+  defp validate_future_date(changeset, field) do
+    validate_change(changeset, field, fn _, value ->
+      today = NaiveDateTime.utc_now()
+      IO.inspect(today)
+      case NaiveDateTime.compare(value, today) do
+        :gt -> []
+        _ -> [{field, "must be a future date"}]
+      end
+    end)
+  end
+
+  defp validate_map(changeset, field) do
+    validate_change(changeset, field, fn _, value ->
+      if is_map(value) do
+        []
+      else
+        [{field, "must be a map"}]
+      end
+    end)
   end
 
   def execute(task) do
