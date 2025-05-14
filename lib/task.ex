@@ -28,7 +28,6 @@ defmodule JobScheduler.Task do
   defp validate_future_date(changeset, field) do
     validate_change(changeset, field, fn _, value ->
       today = NaiveDateTime.utc_now()
-      IO.inspect(today)
       case NaiveDateTime.compare(value, today) do
         :gt -> []
         _ -> [{field, "must be a future date"}]
@@ -47,8 +46,8 @@ defmodule JobScheduler.Task do
   end
 
   def execute(task) do
-    HTTPoison.post(task.url, task.body)
-    IO.puts("executing task #{task.name}")
+    #HTTPoison.post(task.url, task.body)
+    IO.inspect("executing task #{task.name}. url: #{task.url}")
     :ok
   end
 end

@@ -8,13 +8,13 @@ defmodule JobScheduler.Queue do
     GenServer.start_link(__MODULE__, [], name: via_tuple(queue_name))
   end
 
-  def enqueue(task) do
-    case Registry.lookup(JobScheduler.JobsRegistry, task.queue_name) do
+  def enqueue(queue_name, task) do
+    case Registry.lookup(JobScheduler.JobsRegistry, queue_name) do
       [{pid, _}] ->
         GenServer.call(pid, {:enqueue, task})
 
       [] ->
-        {:error, "queue #{task.queue_name} does not exist"}
+        {:error, "queue #{queue_name} does not exist"}
     end
   end
 
@@ -72,13 +72,13 @@ defmodule JobScheduler.Queue do
   # return value: {due_tasks, pending_tasks_for_future}
   defp split_tasks(tasks) do
     Enum.split_with(tasks, fn task ->
-      DateTime.compare(task.schedule_time, DateTime.utc_now()) in [:lt, :eq]
+      NaiveDateTime.compare(task.schedule_time, NaiveDateTime.utc_now()) in [:lt, :eq]
     end)
   end
 
   defp schedule_processing_of_pending_tasks([]), do: :ok
 
-  defp schedule_processing_of_pending_tasks([_, _]) do
+  defp schedule_processing_of_pending_tasks(_) do
     Process.send_after(self(), :tick, @interval)
   end
 end
